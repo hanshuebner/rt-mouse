@@ -1,13 +1,13 @@
 # RT PC Mouse Emulator (JavaScript Implementation)
 
-This is an LLM-generated browser-based implementation that emulates an IBM RT PC mouse using a modern web browser. It captures mouse movements from a web interface and converts them to the RT PC mouse protocol, sending the data over a serial connection using the Web Serial API.
+This is an LLM-generated browser-based implementation that emulates an IBM RT PC mouse using a modern web browser. It captures mouse movements from a web interface and converts them to the RT PC mouse protocol, sending the data over a serial connection through a Node.js server using WebSocket connections.
 
 ## Requirements
 
 - Node.js 14 or later
 - USB Serial adapter (9600 baud, 8N1)
-- Modern web browser with Web Serial API support (Chrome, Edge, or Opera)
-- Secure context (HTTPS or localhost)
+- Modern web browser with WebSocket support
+- Local network connection (for browser to server communication)
 
 ## Setup
 
@@ -52,7 +52,7 @@ This will:
 ## Usage
 
 1. Open http://localhost:3000 in your browser
-2. Click "Connect" and select your serial port when prompted
+2. The web interface will automatically connect to the server via WebSocket
 3. The web interface shows:
    - A mouse movement area
    - Three buttons for mouse clicks
@@ -64,7 +64,8 @@ This will:
 ## Implementation Details
 
 This implementation:
-- Uses Web Serial API for serial communication
+- Uses a Node.js server to handle serial port communication
+- Connects browser clients via WebSocket
 - Captures mouse events through a browser window
 - Implements the same protocol state machine as the Swift version
 - Provides real-time protocol debugging through the browser console
@@ -88,15 +89,10 @@ The web interface also includes a debug console that shows:
 
 ## Browser Compatibility
 
-The Web Serial API is required and is currently supported by:
-- Chrome 89+
-- Edge 89+
-- Opera 75+
-
-Note: The Web Serial API requires:
-- A secure context (HTTPS or localhost)
-- User permission to access the serial port
-- A compatible browser
+The implementation requires:
+- A modern web browser with WebSocket support
+- Local network access to the Node.js server
+- JavaScript enabled
 
 ## License
 
