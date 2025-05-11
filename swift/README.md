@@ -9,20 +9,9 @@ This is an LLM-generated macOS implementation that emulates an IBM RT PC mouse b
 xcode-select --install
 ```
 
-2. Install socat for virtual serial port (optional, for testing):
-```bash
-brew install socat
-```
-
 ## Setup
 
-1. Create a virtual serial port pair (optional, for testing):
-```bash
-socat -d -d pty,raw,echo=0 pty,raw,echo=0
-```
-This will output two port paths. Note one of them for use with the emulator.
-
-2. Build the project:
+1. Build the project:
 ```bash
 swift build
 ```
@@ -37,10 +26,32 @@ Run the emulator with the serial port path:
 # With debug logging
 .build/debug/MouseEmulator --debug-serial /dev/cu.usbserial-XXXX
 
-# Available debug options:
-# --debug        : General debug logging
-# --debug-serial : Serial port communication logging
-# --debug-all    : All debug logging
+## Debug Options
+
+### --debug
+Enables general debug logging including:
+- Mouse event capture details (movements, clicks)
+- Button state changes
+- Window and event monitoring status
+- Program initialization and shutdown events
+
+### --debug-serial
+Enables detailed serial port communication logging:
+- Raw data packets being sent
+- Protocol conversion details
+- Serial port connection status
+- Communication errors and retries
+
+### --debug-all
+Enables all logging options above plus:
+- Detailed protocol state machine transitions
+- Timing and performance metrics
+- Memory usage statistics
+- System resource monitoring
+
+Multiple debug flags can be combined, for example:
+```bash
+.build/debug/MouseEmulator --debug --debug-serial /dev/cu.usbserial-XXXX
 ```
 
 The program will:
