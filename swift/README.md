@@ -25,6 +25,7 @@ Run the emulator with the serial port path:
 
 # With debug logging
 .build/debug/MouseEmulator --debug-serial /dev/cu.usbserial-XXXX
+```
 
 ## Debug Options
 
