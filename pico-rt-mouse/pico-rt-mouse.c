@@ -109,6 +109,7 @@ void send_configured_uart() {
 
 // Translate TinyUSB mouse report to RT PC format and send over UART1
 void send_rt_mouse_data(const hid_mouse_report_t *report) {
+    printf("sending report.\n");
     uint8_t status = 0;
     if (report->buttons & 0x01) status |= 0x20; // left
     if (report->buttons & 0x02) status |= 0x80; // right
@@ -232,7 +233,7 @@ int main(void) {
     tuh_init(BOARD_TUH_RHPORT);
     board_init_after_tusb();
     init_rt_uart();
-    printf("pico-rt-mouse running (UART1 RT mouse protocol)\n");
+    printf("pico-rt-mouse running (RT mouse protocol on UART1)\n");
     while (1) {
         tuh_task();
         poll_rt_mouse_uart();
