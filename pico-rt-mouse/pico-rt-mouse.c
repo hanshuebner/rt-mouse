@@ -144,19 +144,45 @@ void send_configured_uart() {
     send_mouse_report_uart(conf);
 }
 
+// Convert mouse delta to 7-bit two's complement format
+// Returns a value where:
+// - The 8th bit is always 0
+// - The lower 7 bits represent the value in two's complement
+// - Values are clamped to -64 to 63 (7-bit two's complement range)
+static uint8_t convert_delta(int8_t delta) {
+    // Clamp to 7-bit two's complement range (-64 to 63)
+    if (delta > 63) delta = 63;
+    if (delta < -64) delta = -64;
+
+    // Convert to 7-bit two's complement
+    // For negative numbers, we need to convert to two's complement
+    // For positive numbers, we just need to ensure the 8th bit is 0
+    if (delta < 0) {
+        // Convert to two's complement: invert bits and add 1
+        // Then mask to keep only 7 bits
+        return (uint8_t)((~(-delta) + 1) & 0x7F);
+    } else {
+        // For positive numbers, just mask to 7 bits
+        return (uint8_t)(delta & 0x7F);
+    }
+}
+
 // Translate TinyUSB mouse report to RT PC format and send over UART1
 void send_rt_mouse_data(const struct mouse_report *report) {
     uint8_t status = 0;
     if (report->buttons & 0x01) status |= 0x20; // left
     if (report->buttons & 0x02) status |= 0x80; // right
     if (report->buttons & 0x04) status |= 0x40; // middle
+
+    // Set sign bits in status byte
     if (report->x < 0) status |= 0x04;
     if (report->y < 0) status |= 0x02;
+
     uint8_t out[4] = {
         RT_MOUSE_DATA_REPORT,
         status,
-        (uint8_t)abs(report->x),
-        (uint8_t)abs(report->y)
+        convert_delta(report->x),
+        convert_delta(report->y)
     };
     send_mouse_report_uart(out);
 }
