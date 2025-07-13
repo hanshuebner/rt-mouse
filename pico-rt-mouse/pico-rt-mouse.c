@@ -88,18 +88,18 @@ void send_mouse_report_uart(const uint8_t report[4]);
 
 // UART1 initialization
 void init_rt_uart() {
-    printf("Initializing UART1: baud=%d, data=%d, stop=%d, parity=%d\n", 
+    printf("Initializing UART1: baud=%d, data=%d, stop=%d, parity=%d\n",
            RT_UART_BAUD, RT_UART_DATA_BITS, RT_UART_STOP_BITS, RT_UART_PARITY);
-    
+
     uart_init(RT_UART_ID, RT_UART_BAUD);
     uart_set_format(RT_UART_ID, RT_UART_DATA_BITS, RT_UART_STOP_BITS, RT_UART_PARITY);
     uart_set_hw_flow(RT_UART_ID, false, false);
     uart_set_fifo_enabled(RT_UART_ID, true);
-    
+
     // Set pins to UART function
     gpio_set_function(RT_UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(RT_UART_RX_PIN, GPIO_FUNC_UART);
-    
+
     // Verify UART is enabled
     if (uart_is_enabled(RT_UART_ID)) {
         printf("UART1 enabled successfully\n");
@@ -144,28 +144,8 @@ void send_configured_uart() {
     send_mouse_report_uart(conf);
 }
 
-// Convert mouse delta to 7-bit two's complement format
-// Returns a value where:
-// - The 8th bit is always 0
-// - The lower 7 bits represent the value in two's complement
-// - Values are clamped to -64 to 63 (7-bit two's complement range)
-static uint8_t convert_delta(int8_t delta) {
-    // Clamp to 7-bit two's complement range (-64 to 63)
-    if (delta > 63) delta = 63;
-    if (delta < -64) delta = -64;
-
-    // Convert to 7-bit two's complement
-    // For negative numbers, we need to convert to two's complement
-    // For positive numbers, we just need to ensure the 8th bit is 0
-    if (delta < 0) {
-        // Convert to two's complement: invert bits and add 1
-        // Then mask to keep only 7 bits
-        return (uint8_t)((~(-delta) + 1) & 0x7F);
-    } else {
-        // For positive numbers, just mask to 7 bits
-        return (uint8_t)(delta & 0x7F);
-    }
-}
+#define min(x, y) ((x) < (y) ? (x) : (y))
+#define max(x, y) ((x) > (y) ? (x) : (y))
 
 // Translate TinyUSB mouse report to RT PC format and send over UART1
 void send_rt_mouse_data(const struct mouse_report *report) {
@@ -174,15 +154,18 @@ void send_rt_mouse_data(const struct mouse_report *report) {
     if (report->buttons & 0x02) status |= 0x80; // right
     if (report->buttons & 0x04) status |= 0x40; // middle
 
+    int8_t x = report->x;
+    int8_t y = -report->y;
+
     // Set sign bits in status byte
-    if (report->x < 0) status |= 0x04;
-    if (report->y < 0) status |= 0x02;
+    if (x < 0) status |= 0x04;
+    if (y < 0) status |= 0x02;
 
     uint8_t out[4] = {
         RT_MOUSE_DATA_REPORT,
         status,
-        convert_delta(report->x),
-        convert_delta(report->y)
+        report->x > 0 ? min(127, x) : max(-127, x),
+        report->y > 0 ? min(127, y) : max(-127, y),
     };
     send_mouse_report_uart(out);
 }
@@ -302,4 +285,4 @@ int main(void) {
         poll_rt_mouse_uart();
     }
     return 0;
-} 
+}
